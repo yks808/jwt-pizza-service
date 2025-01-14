@@ -8,7 +8,7 @@ class DB {
   constructor() {
     this.initialized = this.initializeDatabase();
   }
-
+  //when you click order tab
   async getMenu() {
     const connection = await this.getConnection();
     try {
@@ -29,6 +29,7 @@ class DB {
     }
   }
 
+  //when you register
   async addUser(user) {
     const connection = await this.getConnection();
     try {
@@ -55,6 +56,7 @@ class DB {
     }
   }
 
+  //when you login
   async getUser(email, password) {
     const connection = await this.getConnection();
     try {
@@ -96,6 +98,7 @@ class DB {
     }
   }
 
+  //when you login
   async loginUser(userId, token) {
     token = this.getTokenSignature(token);
     const connection = await this.getConnection();
@@ -105,7 +108,7 @@ class DB {
       connection.end();
     }
   }
-
+  //when you log out
   async isLoggedIn(token) {
     token = this.getTokenSignature(token);
     const connection = await this.getConnection();
@@ -117,6 +120,7 @@ class DB {
     }
   }
 
+  //when you logout
   async logoutUser(token) {
     token = this.getTokenSignature(token);
     const connection = await this.getConnection();
@@ -126,7 +130,7 @@ class DB {
       connection.end();
     }
   }
-
+  //when you click profile tab
   async getOrders(user, page = 1) {
     const connection = await this.getConnection();
     try {
@@ -141,7 +145,7 @@ class DB {
       connection.end();
     }
   }
-
+  //when you click pay now button from payment 
   async addDinerOrder(user, order) {
     const connection = await this.getConnection();
     try {
@@ -156,7 +160,7 @@ class DB {
       connection.end();
     }
   }
-
+  //when you create franchise from createFranchise.tsx
   async createFranchise(franchise) {
     const connection = await this.getConnection();
     try {
@@ -200,6 +204,7 @@ class DB {
     }
   }
 
+  //when you clcik order tab or when you click create franchise as admin
   async getFranchises(authUser) {
     const connection = await this.getConnection();
     try {
@@ -216,7 +221,7 @@ class DB {
       connection.end();
     }
   }
-
+  //when you click franchise tab as a franchise user and when you click create store
   async getUserFranchises(userId) {
     const connection = await this.getConnection();
     try {
@@ -235,7 +240,7 @@ class DB {
       connection.end();
     }
   }
-
+  //when you click franchise tab as a franchise user or when you click create store or when you click delete Franchise
   async getFranchise(franchise) {
     const connection = await this.getConnection();
     try {
@@ -253,6 +258,7 @@ class DB {
     }
   }
 
+  //when you create store from createStore.tsx
   async createStore(franchiseId, store) {
     const connection = await this.getConnection();
     try {
@@ -262,7 +268,7 @@ class DB {
       connection.end();
     }
   }
-
+  //when you delete store from closeStore.tsx
   async deleteStore(franchiseId, storeId) {
     const connection = await this.getConnection();
     try {
@@ -332,7 +338,8 @@ class DB {
         }
 
         for (const statement of dbModel.tableCreateStatements) {
-          await connection.query(statement);
+          await connection.
+            query(statement);
         }
 
         if (!dbExists) {
