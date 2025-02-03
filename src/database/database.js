@@ -204,7 +204,7 @@ class DB {
     }
   }
 
-  //when you clcik order tab or when you click create franchise as admin
+  //when you clcik order tab or when you click create franchise as admin(after creating)
   async getFranchises(authUser) {
     const connection = await this.getConnection();
     try {
@@ -240,7 +240,7 @@ class DB {
       connection.end();
     }
   }
-  //when you click franchise tab as a franchise user or when you click create store or when you click delete Franchise
+  //when you click franchise tab as a franchise user, click create store, click admin tab as admin, click delete Franchise
   async getFranchise(franchise) {
     const connection = await this.getConnection();
     try {

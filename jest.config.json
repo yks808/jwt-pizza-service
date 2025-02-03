@@ -1,0 +1,15 @@
+{
+    "collectCoverage": true,
+    "coverageReporters": [
+        "json-summary",
+        "text"
+    ],
+    "coverageThreshold": {
+        "global": {
+            "lines": 80
+        }
+    },
+    "setupFilesAfterEnv": [
+        "<rootDir>/jest.setup.js"
+    ]
+}
