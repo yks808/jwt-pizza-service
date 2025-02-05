@@ -6,7 +6,6 @@ const { authRouter } = require('./authRouter');
 
 jest.mock('../database/database.js');
 jest.mock('./authRouter');
-const fetch = require('node-fetch');
 jest.mock('node-fetch');
 
 const app = express();

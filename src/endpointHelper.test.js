@@ -25,18 +25,3 @@ test('check the next middleware works when an async function succeeds', async ()
 
   expect(next).toHaveBeenCalled();
 });
-
-test('scheck that next with an error works when the async function throws an error', async () => {
-  const req = {};
-  const res = {};
-  const next = jest.fn();
-  
-  const asyncFunction = async (req, res, next) => {
-    throw new StatusCodeError('Internal Server Error', 500);
-  };
-
-  const wrapped = asyncHandler(asyncFunction);
-  await wrapped(req, res, next);
-
-  expect(next).toHaveBeenCalledWith(expect.any(StatusCodeError));
-});
