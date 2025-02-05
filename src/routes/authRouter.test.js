@@ -46,3 +46,10 @@ test('registry missing info', async() => {
 function expectValidJwt(potentialJwt) {
   expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
 }
+
+test('updateUser with without authorization', async () => {
+  const res = await request(app).put(`/api/auth/${testUser.id}`).set('Authorization', `Bearer faketoken`)
+    .send({ email: 'faketoken@test.com', password: 'fakepassword' });
+  expect(res.status).toBe(401);
+  expect(res.body.message).toBe('unauthorized');
+});
