@@ -1,5 +1,17 @@
 const request = require('supertest');
 const app = require('./service');
+const metrics = require('./metrics');
+
+// Set metrics to test mode at the beginning
+beforeAll(() => {
+  metrics.setTestMode(true);
+});
+
+// Clean up after each test
+afterEach(() => {
+  metrics.shutdown();
+});
+
 
 test('test if get works', async () => {
   const response = await request(app).get('/');

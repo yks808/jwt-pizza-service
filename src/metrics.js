@@ -1,6 +1,8 @@
 const config = require('./config');
 const os = require('os');
 
+// Add a testing flag for tests to use
+let isTestEnvironment = process.env.NODE_ENV === 'test';
 
 // Track HTTP requests by method
 const requestCounts = {
@@ -105,11 +107,16 @@ function trackPizzaCreationLatency(duration) {
 
 // Send metrics to Grafana
 function sendMetricToGrafana(name, value, attributes = {}) {
+  // Skip sending metrics in test environment
+  if (isTestEnvironment) {
+    return Promise.resolve({ ok: true });
+  }
+
   // Validate input
   const numericValue = Number(value);
   if (isNaN(numericValue)) {
     console.error(`Invalid metric value for ${name}: ${value}`);
-    return;
+    return Promise.resolve({ ok: false });
   }
 
   // Add your source to attributes
@@ -151,8 +158,13 @@ function sendMetricToGrafana(name, value, attributes = {}) {
     });
   });
 
+  // Skip actual fetch during tests
+  if (isTestEnvironment) {
+    return Promise.resolve({ ok: true });
+  }
+
   // Send to Grafana
-  fetch(`${config.metrics.url}`, {
+  return fetch(`${config.metrics.url}`, {
     method: 'POST',
     body: JSON.stringify(metric),
     headers: { 
@@ -171,6 +183,7 @@ function sendMetricToGrafana(name, value, attributes = {}) {
       } else {
         console.log(`Pushed metric ${name}: ${value}`);
       }
+      return response;
     })
     .catch((error) => {
       console.error(`Error pushing metric ${name}:`, {
@@ -178,11 +191,15 @@ function sendMetricToGrafana(name, value, attributes = {}) {
         metricName: name,
         metricValue: value
       });
+      throw error;
     });
 }
 
 // Send HTTP request metrics every 10 seconds
 function startMetricsReporting() {
+  // Use a shorter interval for tests
+  const interval = isTestEnvironment ? 1000 : 10000;
+  
   return setInterval(() => {
     try {
       // Send each method count
@@ -253,16 +270,20 @@ function startMetricsReporting() {
     } catch (error) {
       console.error('Error sending metrics', error);
     }
-  }, 10000); // every 10 seconds
+  }, interval);
 }
 
 // Initialize metrics reporting
 let metricsTimer = null;
 function init() {
-  if (!metricsTimer) {
-    metricsTimer = startMetricsReporting();
-    console.log('Metrics reporting initialized');
-  }
+  // Ensure any existing timer is cleared first
+  shutdown();
+  
+  // Start a new timer
+  metricsTimer = startMetricsReporting();
+  console.log('Metrics reporting initialized');
+  
+  return metricsTimer;
 }
 
 // Clean up on shutdown
@@ -272,6 +293,40 @@ function shutdown() {
     metricsTimer = null;
     console.log('Metrics reporting stopped');
   }
+  
+  // Reset all metrics to ensure clean state
+  resetAllMetrics();
+}
+
+// Helper to reset all metrics
+function resetAllMetrics() {
+  // Reset request counts
+  requestCounts.GET = 0;
+  requestCounts.POST = 0;
+  requestCounts.PUT = 0;
+  requestCounts.DELETE = 0;
+  requestCounts.total = 0;
+  
+  // Reset authentication attempts
+  authAttempts.success = 0;
+  authAttempts.failed = 0;
+  
+  // Reset user counts
+  activeUsers = 0;
+  
+  // Reset pizza metrics
+  pizzaMetrics.sold = 0;
+  pizzaMetrics.failed = 0;
+  pizzaMetrics.revenue = 0;
+  
+  // Reset latency metrics
+  latencyMetrics.endpoints = {};
+  latencyMetrics.pizzaCreation = [];
+}
+
+// For testing purposes
+function setTestMode(isTest) {
+  isTestEnvironment = isTest;
 }
 
 module.exports = {
@@ -282,5 +337,7 @@ module.exports = {
   trackPizzaPurchase,
   trackPizzaCreationLatency,
   init,
-  shutdown
+  shutdown,
+  setTestMode,
+  resetAllMetrics
 };
