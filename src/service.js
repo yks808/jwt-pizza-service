@@ -4,8 +4,13 @@ const orderRouter = require('./routes/orderRouter.js');
 const franchiseRouter = require('./routes/franchiseRouter.js');
 const version = require('./version.json');
 const config = require('./config.js');
+const metrics = require('./metrics.js');
 
 const app = express();
+
+metrics.init();
+app.use(metrics.requestTracker);
+
 app.use(express.json());
 app.use(setAuthUser);
 app.use((req, res, next) => {
@@ -47,6 +52,14 @@ app.use('*', (req, res) => {
 app.use((err, req, res, next) => {
   res.status(err.statusCode ?? 500).json({ message: err.message, stack: err.stack });
   next();
+});
+
+process.on('SIGTERM', () => {
+  metrics.shutdown();
+});
+
+process.on('SIGINT', () => {
+  metrics.shutdown();
 });
 
 module.exports = app;

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config.js');
 const { asyncHandler } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
+const metrics = require('../metrics');
 
 const authRouter = express.Router();
 
@@ -79,13 +80,35 @@ authRouter.post(
 
 
 // login
+//authRouter.put(
+  //'/',
+  //asyncHandler(async (req, res) => {
+    //const { email, password } = req.body;
+    //const user = await DB.getUser(email, password);
+    //const auth = await setAuth(user);
+    //metrics.trackAuth(true);
+    //res.json({ user: user, token: auth });
+  //})
+//);
+
+// login with metrics
 authRouter.put(
   '/',
   asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    const user = await DB.getUser(email, password);
-    const auth = await setAuth(user);
-    res.json({ user: user, token: auth });
+    try {
+      const user = await DB.getUser(email, password);
+      
+      // If we get here and have a user, authentication succeeded
+      const auth = await setAuth(user);
+      metrics.trackAuth(true); // Track successful login
+      metrics.userLogin(); 
+      res.json({ user: user, token: auth });
+    } catch (error) {
+      // DB.getUser threw an exception, which means authentication failed
+      metrics.trackAuth(false); // Track failed login
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
   })
 );
 
@@ -95,6 +118,7 @@ authRouter.delete(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     await clearAuth(req);
+    metrics.userLogout();
     res.json({ message: 'logout successful' });
   })
 );
