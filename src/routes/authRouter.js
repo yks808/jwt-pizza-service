@@ -104,7 +104,7 @@ authRouter.put(
       metrics.trackAuth(true); // Track successful login
       metrics.userLogin(); 
       res.json({ user: user, token: auth });
-    } catch (error) {
+    } catch {
       // DB.getUser threw an exception, which means authentication failed
       metrics.trackAuth(false); // Track failed login
       res.status(401).json({ message: 'Invalid credentials' });
