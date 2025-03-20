@@ -54,7 +54,7 @@ function requestTracker(req, res, next) {
   const start = Date.now();
   const endpoint = req.path;
 
-  console.log(`Request: ${method} ${endpoint}`);
+  //console.log(`Request: ${method} ${endpoint}`);
   // This captures when the response is sent
   res.on('finish', () => {
     const duration = Date.now() - start;
@@ -78,14 +78,14 @@ function trackAuth(success) {
 
 function userLogin() {
     activeUsers++;
-    console.log(`User logged in. Active users: ${activeUsers}`);
+    //console.log(`User logged in. Active users: ${activeUsers}`);
 }
 
 function userLogout() {
     if (activeUsers > 0) {
       activeUsers--;
     }
-    console.log(`User logged out. Active users: ${activeUsers}`);
+    //console.log(`User logged out. Active users: ${activeUsers}`);
 }
 
 function trackPizzaPurchase(count, revenue, success) {
@@ -95,12 +95,12 @@ function trackPizzaPurchase(count, revenue, success) {
     } else {
       pizzaMetrics.failed += count;
     }
-    console.log(`Pizza purchase - Count: ${count}, Revenue: $${revenue}, Success: ${success}`);
+    //console.log(`Pizza purchase - Count: ${count}, Revenue: $${revenue}, Success: ${success}`);
 }
 
 function trackPizzaCreationLatency(duration) {
     latencyMetrics.pizzaCreation.push(duration);
-    console.log(`Pizza creation latency: ${duration}ms`);
+    //console.log(`Pizza creation latency: ${duration}ms`);
 }
 
 // Send metrics to Grafana
@@ -108,7 +108,7 @@ function sendMetricToGrafana(name, value, attributes = {}) {
   // Validate input
   const numericValue = Number(value);
   if (isNaN(numericValue)) {
-    console.error(`Invalid metric value for ${name}: ${value}`);
+    //console.error(`Invalid metric value for ${name}: ${value}`);
     return;
   }
 
@@ -261,7 +261,7 @@ let metricsTimer = null;
 function init() {
   if (!metricsTimer) {
     metricsTimer = startMetricsReporting();
-    console.log('Metrics reporting initialized');
+    //console.log('Metrics reporting initialized');
   }
 }
 
@@ -270,7 +270,7 @@ function shutdown() {
   if (metricsTimer) {
     clearInterval(metricsTimer);
     metricsTimer = null;
-    console.log('Metrics reporting stopped');
+    //console.log('Metrics reporting stopped');
   }
 }
 
