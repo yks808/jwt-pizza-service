@@ -1,8 +1,6 @@
 const config = require('./config');
 const os = require('os');
 
-
-// Track HTTP requests by method
 const requestCounts = {
   GET: 0,
   POST: 0,
@@ -42,9 +40,7 @@ function getMemoryUsagePercentage() {
   return memoryUsage;
 }
 
-// HTTP request middleware
 function requestTracker(req, res, next) {
-  // Count request by method
   const method = req.method;
   if (requestCounts[method] !== undefined) {
     requestCounts[method]++;
@@ -54,8 +50,7 @@ function requestTracker(req, res, next) {
   const start = Date.now();
   const endpoint = req.path;
 
-  //console.log(`Request: ${method} ${endpoint}`);
-  // This captures when the response is sent
+  console.log(`Request: ${method} ${endpoint}`);
   res.on('finish', () => {
     const duration = Date.now() - start;
     
@@ -78,14 +73,14 @@ function trackAuth(success) {
 
 function userLogin() {
     activeUsers++;
-    //console.log(`User logged in. Active users: ${activeUsers}`);
+    console.log(`User logged in. Active users: ${activeUsers}`);
 }
 
 function userLogout() {
     if (activeUsers > 0) {
       activeUsers--;
     }
-    //console.log(`User logged out. Active users: ${activeUsers}`);
+    console.log(`User logged out. Active users: ${activeUsers}`);
 }
 
 function trackPizzaPurchase(count, revenue, success) {
@@ -95,24 +90,21 @@ function trackPizzaPurchase(count, revenue, success) {
     } else {
       pizzaMetrics.failed += count;
     }
-    //console.log(`Pizza purchase - Count: ${count}, Revenue: $${revenue}, Success: ${success}`);
+    console.log(`Pizza purchase - Count: ${count}, Revenue: $${revenue}, Success: ${success}`);
 }
 
 function trackPizzaCreationLatency(duration) {
     latencyMetrics.pizzaCreation.push(duration);
-    //console.log(`Pizza creation latency: ${duration}ms`);
+    console.log(`Pizza creation latency: ${duration}ms`);
 }
 
-// Send metrics to Grafana
 function sendMetricToGrafana(name, value, attributes = {}) {
-  // Validate input
   const numericValue = Number(value);
   if (isNaN(numericValue)) {
-    //console.error(`Invalid metric value for ${name}: ${value}`);
+    console.error(`Invalid metric value for ${name}: ${value}`);
     return;
   }
 
-  // Add your source to attributes
   attributes = { ...attributes, source: config.metrics.source };
 
   const metric = {
@@ -143,7 +135,6 @@ function sendMetricToGrafana(name, value, attributes = {}) {
     ],
   };
 
-  // Add all attributes to the datapoint
   Object.keys(attributes).forEach((key) => {
     metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push({
       key: key,
@@ -151,7 +142,6 @@ function sendMetricToGrafana(name, value, attributes = {}) {
     });
   });
 
-  // Send to Grafana
   fetch(`${config.metrics.url}`, {
     method: 'POST',
     body: JSON.stringify(metric),
@@ -181,41 +171,39 @@ function sendMetricToGrafana(name, value, attributes = {}) {
     });
 }
 
-// Send HTTP request metrics every 10 seconds
 function startMetricsReporting() {
   return setInterval(() => {
     try {
-      // Send each method count
       sendMetricToGrafana('http_requests_total', requestCounts.total);
       sendMetricToGrafana('http_requests_get', requestCounts.GET, { method: 'GET' });
       sendMetricToGrafana('http_requests_post', requestCounts.POST, { method: 'POST' });
       sendMetricToGrafana('http_requests_put', requestCounts.PUT, { method: 'PUT' });
       sendMetricToGrafana('http_requests_delete', requestCounts.DELETE, { method: 'DELETE' });
 
-      // Add system metrics
       const cpuUsage = getCpuUsagePercentage();
       const memoryUsage = getMemoryUsagePercentage();
       sendMetricToGrafana('cpu_usage_percent', cpuUsage);
       sendMetricToGrafana('memory_usage_percent', memoryUsage);
 
-      //console.log('Current request counts:', requestCounts);
-      //console.log('System metrics - CPU: ' + cpuUsage + '%, Memory: ' + memoryUsage + '%');
+      console.log('Current request counts:', requestCounts);
+      console.log('System metrics - CPU: ' + cpuUsage + '%, Memory: ' + memoryUsage + '%');
       
       sendMetricToGrafana('auth_attempts_success', authAttempts.success, { result: 'success' });
       sendMetricToGrafana('auth_attempts_failed', authAttempts.failed, { result: 'failed' });
       
-      //console.log('Auth metrics - Success: ' + authAttempts.success + ', Failed: ' + authAttempts.failed);
+      console.log('Auth metrics - Success: ' + authAttempts.success + ', Failed: ' + authAttempts.failed);
 
       sendMetricToGrafana('active_users', activeUsers);
-      //console.log('User metrics - Active users: ' + activeUsers);
+      console.log('User metrics - Active users: ' + activeUsers);
 
       sendMetricToGrafana('pizzas_sold', pizzaMetrics.sold);
       sendMetricToGrafana('pizzas_failed', pizzaMetrics.failed);
+      sendMetricToGrafana('pizza_revenue', Math.round(pizzaMetrics.revenue * 100)); 
       sendMetricToGrafana('pizza_revenue', Math.round(pizzaMetrics.revenue * 100));
 
-      //console.log('Pizza metrics - Sold: ' + pizzaMetrics.sold + 
-        //', Failed: ' + pizzaMetrics.failed + 
-        //', Revenue: $' + pizzaMetrics.revenue.toFixed(2));
+      console.log('Pizza metrics - Sold: ' + pizzaMetrics.sold + 
+        ', Failed: ' + pizzaMetrics.failed + 
+        ', Revenue: $' + pizzaMetrics.revenue.toFixed(2));
     
       Object.entries(latencyMetrics.endpoints).forEach(([endpoint, durations]) => {
           if (durations.length > 0) {
@@ -224,8 +212,6 @@ function startMetricsReporting() {
           }
       });
 
-      
-      // Pizza creation latency
       if (latencyMetrics.pizzaCreation.length > 0) {
         const avgDuration = latencyMetrics.pizzaCreation.reduce((sum, val) => sum + val, 0) / 
                            latencyMetrics.pizzaCreation.length;
@@ -233,7 +219,6 @@ function startMetricsReporting() {
         console.log('Latency metrics - Pizza creation: ' + avgDuration.toFixed(2) + 'ms');
       }
       
-      // Reset per-interval counters
       requestCounts.GET = 0;
       requestCounts.POST = 0;
       requestCounts.PUT = 0;
@@ -247,7 +232,6 @@ function startMetricsReporting() {
       pizzaMetrics.failed = 0;
       pizzaMetrics.revenue = 0;
 
-      // Reset latency metrics after sending
       latencyMetrics.endpoints = {};
       latencyMetrics.pizzaCreation = [];
     } catch (error) {
@@ -256,21 +240,19 @@ function startMetricsReporting() {
   }, 10000); // every 10 seconds
 }
 
-// Initialize metrics reporting
 let metricsTimer = null;
 function init() {
   if (!metricsTimer) {
     metricsTimer = startMetricsReporting();
-    //console.log('Metrics reporting initialized');
+    console.log('Metrics reporting initialized');
   }
 }
 
-// Clean up on shutdown
 function shutdown() {
   if (metricsTimer) {
     clearInterval(metricsTimer);
     metricsTimer = null;
-    //console.log('Metrics reporting stopped');
+    console.log('Metrics reporting stopped');
   }
 }
 
