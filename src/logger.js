@@ -78,8 +78,8 @@ const unhandledErrorLogger = (error) => {
 };
 
 module.exports = {
-  httpLogger: logger.httpLogger, // Express middleware for HTTP request logging
-  dbLogger:                 // Custom database query logger
-  factoryLogger,                 // Custom factory request logger
-  unhandledErrorLogger,          // Custom unhandled exception logger
+  httpLogger: logger.httpLogger, 
+  dbLogger: dbLogger,                
+  factoryLogger,              
+  unhandledErrorLogger,      
 };
