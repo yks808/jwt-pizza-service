@@ -4,6 +4,7 @@ const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 const metrics = require('../metrics');
+const logger = require('../logger.js');
 
 const orderRouter = express.Router();
 
@@ -102,6 +103,18 @@ orderRouter.post(
     const orderReq = req.body;
     const order = await DB.addDinerOrder(req.user, orderReq);
     
+    const orderInfo = { 
+      diner: { 
+        id: req.user.id, 
+        name: req.user.name, 
+        email: req.user.email 
+      }, 
+      order 
+    };
+    
+    // Log factory service request
+    logger.factoryLogger(orderInfo);
+
     // Calculate total items and revenue for metrics
     const totalItems = order.items.length;
     const totalRevenue = order.items.reduce((sum, item) => sum + item.price, 0);
@@ -132,6 +145,8 @@ orderRouter.post(
         res.status(500).send({ message: 'Failed to fulfill order at factory', reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl });
       }
     } catch (error) {
+      logger.unhandledErrorLogger(error);
+      
       // Calculate latency even for errors
       const duration = Date.now() - startTime;
       metrics.trackPizzaCreationLatency(duration);
